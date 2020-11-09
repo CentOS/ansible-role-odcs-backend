@@ -1,0 +1,125 @@
+from os import path
+
+confdir = path.abspath(path.dirname(__file__))
+# use parent dir as dbdir else fallback to current dir
+dbdir = path.abspath(path.join(confdir, '..')) if confdir.endswith('conf') \
+    else confdir
+
+class BaseConfiguration(object):
+    # Make this random (used to generate session keys)
+    SECRET_KEY = '74d9e9f9cd40e66fc6c4c2e9987dce48df3ce98542529fd0'
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///{0}'.format(path.join(
+        dbdir, 'odcs.db'))
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    HOST = '127.0.0.1'
+    PORT = 5005
+
+    DEBUG = False
+    # Global network-related values, in seconds
+    NET_TIMEOUT = 120
+    NET_RETRY_INTERVAL = 30
+
+    # Available backends are: console, file, journal.
+    LOG_BACKEND = 'journal'
+
+    # Path to log file when LOG_BACKEND is set to "file".
+    LOG_FILE = 'odcs.log'
+
+    # Available log levels are: debug, info, warn, error.
+    LOG_LEVEL = 'info'
+
+    SSL_ENABLED = False
+
+
+class DevConfiguration(BaseConfiguration):
+    DEBUG = True
+    LOG_BACKEND = 'console'
+    LOG_LEVEL = 'debug'
+
+    # Global network-related values, in seconds
+    NET_TIMEOUT = 5
+    NET_RETRY_INTERVAL = 1
+
+
+class TestConfiguration(BaseConfiguration):
+    LOG_BACKEND = 'console'
+    LOG_LEVEL = 'debug'
+    DEBUG = True
+
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///{0}'.format(
+        path.join(dbdir, 'tests', 'test_odcs.db'))
+
+    # Global network-related values, in seconds
+    NET_TIMEOUT = 3
+    NET_RETRY_INTERVAL = 1
+
+
+class ProdConfiguration(BaseConfiguration):
+    SECRET_KEY = "{{ odcs_secret_key }}"
+    SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://{{ odcs_db_username }}:{{ odcs_db_password }}@{{ odcs_db_host }}:{{ odcs_db_port }}/{{ odcs_db_name }}{{ '?sslmode=require' if odcs_force_postgres_ssl else '' }}'
+    KOJI_PROFILE = "{{ odcs_koji_profile }}"
+    MBS_URL = "{{ odcs_mbs_url }}"
+    TARGET_DIR = "{{ odcs_target_dir }}"
+    TARGET_DIR_URL = "{{ odcs_target_url }}"
+
+    AUTH_BACKEND = "{{ odcs_auth_backend }}"
+    AUTH_LDAP_SERVER = "{{ odcs_auth_ldap_server }}"
+    AUTH_LDAP_GROUP_BASE = "{{ odcs_auth_ldap_group_base }}"
+
+    MESSAGING_BACKEND = "{{ odcs_messaging_backend }}"
+    MESSAGING_BROKER_URLS = {{ odcs_messaging_producer_broker_urls }}
+    MESSAGING_CERT_FILE = "/etc/ssl/odcs/umb-client.crt"
+    MESSAGING_KEY_FILE = "/etc/ssl/odcs/umb-client.key"
+    MESSAGING_CA_CERT = "{{ odcs_messaging_ca_cert }}"
+    MESSAGING_TOPIC_PREFIX = "{{ odcs_messaging_topic_prefix }}"
+    MESSAGING_TOPIC = "VirtualTopic.eng.odcs.state.change"
+    INTERNAL_MESSAGING_TOPIC = "VirtualTopic.eng.odcs.internal.msg"
+
+    ALLOWED_CLIENTS = {{ odcs_allowed_clients }}
+    ADMINS = {{ odcs_admins }}
+
+    PULP_SERVER_URL = "{{ odcs_pulp_server_url }}"
+    PULP_USERNAME = "{{ odcs_pulp_username }}"
+    PULP_PASSWORD = "{{ odcs_pulp_password }}"
+
+{% if odcs_allowed_source_types %}
+    ALLOWED_SOURCE_TYPES = {{ odcs_allowed_source_types }}
+{% endif %}
+{% if odcs_allowed_flags %}
+    ALLOWED_FLAGS = {{ odcs_allowed_flags }}
+{% endif %}
+{% if odcs_allowed_arches %}
+    ALLOWED_ARCHES = {{ odcs_allowed_arches }}
+{% endif %}
+{% if odcs_allowed_results %}
+    ALLOWED_RESULTS = {{ odcs_allowed_results }}
+{% endif %}
+{% if odcs_allowed_sources %}
+    ALLOWED_SOURCES = {{ odcs_allowed_sources }}
+{% endif %}
+
+{% if odcs_raw_config_urls %}
+    RAW_CONFIG_URLS = {{ odcs_raw_config_urls }}
+{% endif %}
+
+{% if odcs_extra_target_dirs %}
+    EXTRA_TARGET_DIRS = {{ odcs_extra_target_dirs }}
+{% endif %}
+
+    ARCHES = {{ odcs_arches }}
+    SIGKEYS = {{ odcs_sigkeys }}
+
+{% if odcs_celery_broker_host %}
+    CELERY_BROKER_URL = "amqps://{{ odcs_celery_broker_username }}:{{ odcs_celery_broker_password }}@{{ odcs_celery_broker_host }}:{{ odcs_celery_broker_port }}/{{ odcs_celery_broker_vhost }}"
+{% endif %}
+
+    CELERY_CONFIG = {
+        "server_hostname": True,
+    }
+
+{% if odcs_celery_router_config %}
+    CELERY_ROUTER_CONFIG = {{ odcs_celery_router_config }}
+{% endif %}
+
+    RUNROOT_EXTRA_MOUNTS = ["/mnt/koji"]

@@ -1,0 +1,22 @@
+[{{ odcs_koji_profile }}]
+
+;url of XMLRPC server
+server = {{ odcs_koji_server }}
+
+;url of web interface
+weburl = {{ odcs_koji_weburl }}
+
+;url of package download site
+topurl = {{ odcs_koji_topurl }}
+
+;path to the koji top directory
+topdir = {{ odcs_koji_topdir }}
+
+authtype = {{ odcs_koji_authtype }}
+krbservice = {{ odcs_koji_krbservice }}
+
+principal = {{ odcs_krb_auth_principal }}
+keytab = /etc/odcs/odcs.keytab
+
+use_fast_upload = yes
+anon_retry = yes

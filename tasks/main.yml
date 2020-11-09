@@ -1,0 +1,422 @@
+---
+- name: install the EPEL packages required for ODCS backend
+  yum:
+    name: "{{ packages }}"
+    state: present
+    use_backend: yum
+  vars:
+    packages:
+    - python-qpid-proton
+    - python2-koji-cli-plugins
+    - python-psycopg2
+    - python2-celery
+    - mock
+    - dnf
+    - libguestfs-tools-c
+  tags:
+  - odcs
+
+- name: install the internal packages required for ODCS backend
+  yum:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+    use_backend: yum
+  vars:
+    packages:
+    - odcs
+    - jigdo
+    - pungi-modular-support
+    - pungi
+    - koji
+    - libmodulemd2
+  tags:
+  - odcs
+
+- name: Make sure odcs-celery-backend isn't running.
+  service:
+    name: odcs-celery-backend
+    state: stopped
+  tags:
+    - odcs
+    - odcs/backend
+
+- name: create odcs-server group
+  group:
+    name: odcs-server
+    gid: 64321
+    state: present
+ 
+- name: create odcs-server user
+  user:
+    name: odcs-server
+    uid: 64321
+    group: odcs-server
+ 
+- name: ensure ODCS service directories have right ownership
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: odcs-server
+    group: odcs-server
+    recurse: yes
+    follow: no
+  with_items:
+  - /var/run/odcs-backend
+  - /var/log/odcs-backend
+  tags:
+    - odcs
+
+#########
+# Rabbitmq part might need to be moved to different role
+# It also needs help from from fedora-infra to setup
+# https://pagure.io/fedora-infrastructure/issue/9450
+- name: copy the fedora-messaging.toml.j2 file.
+  template:
+    src: "fedora-messaging.toml.j2"
+    dest: /etc/fedora-messaging/config.toml
+    owner: odcs-server
+    group: odcs-server
+    mode: 0640
+  tags:
+  - odcs
+  
+- name: copy the odcs rabbitmq private queue crt.
+  copy:
+    src: "{{private}}/files/rabbitmq/{{env}}/pki/issued/odcs-private-queue{{env_suffix}}.crt"
+    dest: /etc/odcs/odcs-private-queue.crt
+    owner: odcs-server
+    group: apache
+    mode: 0640
+  tags:
+  - odcs
+ 
+- name: copy the odcs rabbitmq private queue key.
+  copy:
+    src: "{{private}}/files/rabbitmq/{{env}}/pki/private/odcs-private-queue{{env_suffix}}.key"
+    dest: /etc/odcs/odcs-private-queue.key
+    owner: odcs-server
+    group: apache
+    mode: 0640
+  tags:
+  - odcs
+ 
+- name: copy the odcs rabbitmq crt.
+  copy:
+    src: "{{private}}/files/rabbitmq/{{env}}/pki/issued/odcs{{env_suffix}}.crt"
+    dest: /etc/odcs/odcs-rabbitmq.crt
+    owner: odcs-server
+    group: apache
+    mode: 0640
+  tags:
+  - odcs
+ 
+- name: copy the odcs rabbitmq key.
+  copy:
+    src: "{{private}}/files/rabbitmq/{{env}}/pki/private/odcs{{env_suffix}}.key"
+    dest: /etc/odcs/odcs-rabbitmq.key
+    owner: odcs-server
+    group: apache
+    mode: 0640
+  tags:
+  - odcs
+ 
+- name: copy the odcs rabbitmq CA cert.
+  copy:
+    src: "{{private}}/files/rabbitmq/{{env}}/pki/ca.crt"
+    dest: /etc/odcs/ca.crt
+    owner: odcs-server
+    group: apache
+    mode: 0640
+  tags:
+  - odcs
+
+- name: ensure Pungi cache files have right ownership
+  file:
+    path: "{{ item }}"
+    owner: odcs-server
+    group: odcs-server
+    state: touch
+  with_items:
+  - /var/tmp/pungi_cache_file.dbm.rw.lock
+  - /var/tmp/pungi_cache_file.dbm
+  tags:
+    - odcs
+
+- name: Configure the odcs virtual host
+  run_once: true
+  delegate_to: "rabbitmq01.iad2.fedoraproject.org"
+  rabbitmq_vhost:
+    name: /odcs
+    state: present
+  tags:
+  - odcs
+
+- name: Configure the HA policy for the odcs queues
+  run_once: true
+  delegate_to: "rabbitmq01.iad2.fedoraproject.org"
+  rabbitmq_policy:
+    name: HA
+    apply_to: queues
+    pattern: .*
+    tags:
+      ha-mode: all
+      ha-sync-mode: automatic  # Auto sync queues to new cluster members
+      ha-sync-batch-size: 10000  # Larger is faster, but must finish in 1 net_ticktime
+    vhost: /odcs
+  tags:
+  - odcs
+
+- name: Add a policy to limit queues to 1GB and remove after a month of no use
+  run_once: true
+  delegate_to: "rabbitmq01.iad2.fedoraproject.org"
+  rabbitmq_policy:
+    apply_to: queues
+    name: pubsub_sweeper
+    state: present
+    pattern: ".*"
+    tags:
+      # Unused queues are killed after 1000 * 60 * 60 * 31 milliseconds (~a month)
+      expires: 111600000
+      # Queues can use at most 1GB of storage
+      max-length-bytes: 1073741824
+    vhost: /odcs
+  tags:
+  - odcs
+
+- name: Create the odcs-admin user for the odcs vhost (prod)
+  run_once: true
+  delegate_to: "rabbitmq01.iad2.fedoraproject.org"
+  rabbitmq_user:
+    user: odcs-admin
+    password: "{{ (env == 'production')|ternary(rabbitmq_odcs_admin_password_production, rabbitmq_odcs_admin_password_staging) }}"
+    vhost: /odcs
+    configure_priv: .*
+    read_priv: .*
+    write_priv: .*
+  tags:
+  - odcs
+
+- name: Dump the admin password in a file for administrative operations
+  run_once: true
+  delegate_to: "rabbitmq01.iad2.fedoraproject.org"
+  copy:
+    dest: /root/.odcs-rabbitmqpass
+    content: "{{ (env == 'production')|ternary(rabbitmq_odcs_admin_password_production, rabbitmq_odcs_admin_password_staging) }}"
+    mode: 0600
+    owner: root
+    group: root
+  tags:
+  - odcs
+
+- name: Grant the admin user access to the odcs vhost
+  run_once: true
+  delegate_to: "rabbitmq01.iad2.fedoraproject.org"
+  rabbitmq_user:
+    user: admin
+    vhost: /odcs
+    configure_priv: .*
+    read_priv: .*
+    write_priv: .*
+    tags: administrator
+  tags:
+  - odcs
+
+- name: Grant the nagios-monitoring user access to the odcs vhost
+  run_once: true
+  delegate_to: "rabbitmq01.iad2.fedoraproject.org"
+  rabbitmq_user:
+    user: nagios-monitoring
+    vhost: /odcs
+    configure_priv: "^$"
+    read_priv: "^$"
+    write_priv: "^$"
+    tags: monitoring
+  tags:
+  - odcs
+
+# Create a user with:
+- name: Create a user for odcs access
+  run_once: true
+  delegate_to: "rabbitmq01.iad2.fedoraproject.org"
+  rabbitmq_user:
+    user: "odcs-private-queue{{ env_suffix }}"
+    vhost: /odcs
+    configure_priv: .*
+    write_priv: .*
+    read_priv: .*
+    state: present
+  tags:
+  - odcs
+#########
+
+
+
+- name: copy the odcs-celery-backend.service file.
+  template:
+    src: "etc/systemd/system/odcs-celery-backend.service.j2"
+    dest: /etc/systemd/system/odcs-celery-backend.service
+    owner: odcs-server
+    group: odcs-server
+    mode: 0640
+  notify:
+  - restart odcs-celery-backend
+  tags:
+  - odcs
+
+- name: copy the odcs-backend.conf tmpfiles.d file.
+  copy:
+    src: "etc/tmpfiles.d/odcs-backend.conf"
+    dest: /etc/tmpfiles.d/odcs-backend.conf
+    owner: odcs-server
+    group: odcs-server
+    mode: 0640
+  tags:
+  - odcs
+
+- name: Run systemd-tmpfiles --create
+  command: systemd-tmpfiles --create
+  args:
+    creates: /var/run/odcs-backend
+  notify:
+  - restart odcs-celery-backend
+  tags:
+  - odcs
+
+- name: copy the odcs logrotate.d config.
+  copy:
+    src: "etc/logrotate.d/odcs"
+    dest: /etc/logrotate.d/odcs
+  tags:
+  - odcs
+
+- name: create ODCS_TARGET_DIR
+  file:
+    path: "{{ odcs_target_dir }}"
+    state: directory
+    owner: odcs-server
+    group: odcs-server
+    mode: 0775
+    follow: no
+  tags:
+  - odcs
+
+- name: create ODCS_TARGET_DIR private
+  file:
+    path: "{{ odcs_target_dir }}/private"
+    state: directory
+    owner: odcs-server
+    group: odcs-server
+    mode: 0770
+    follow: no
+  tags:
+  - odcs
+
+- name: enable ODCS backend (odcs-celery-backend)
+  systemd:
+    name: odcs-celery-backend
+    enabled: yes
+    daemon_reload: yes
+  tags:
+  - odcs
+
+- name: generate the ODCS app config
+  template:
+    src: etc/odcs/config.py.j2
+    dest: /etc/odcs/config.py
+    owner: odcs-server
+    group: odcs-server
+    mode: 0440
+  notify:
+  - restart odcs-celery-backend
+  tags:
+  - odcs
+
+- name: generate the ODCS raw_config_wrapper config
+  template:
+    src: etc/odcs/raw_config_wrapper.conf.j2
+    dest: /etc/odcs/raw_config_wrapper.conf
+    owner: odcs-server
+    group: odcs-server
+    mode: 0444
+  notify:
+  - restart odcs-celery-backend
+  tags:
+  - odcs
+
+- name: copy the ODCS pungi config template
+  copy:
+    src: etc/odcs/pungi.conf
+    dest: "/etc/odcs/pungi.conf"
+    owner: odcs-server
+    group: odcs-server
+  notify:
+  - restart odcs-celery-backend
+  tags:
+  - odcs
+
+- name: copy the ODCS Custom Compose raw_config_wrapper template
+  copy:
+    src: etc/odcs/custom_compose_raw_config_wrapper.conf
+    dest: "/etc/odcs/custom_compose_raw_config_wrapper.conf"
+    owner: odcs-server
+    group: odcs-server
+  notify:
+  - restart odcs-celery-backend
+  tags:
+  - odcs
+
+- name: generate the ODCS koji config
+  template:
+    src: etc/koji.conf.d/odcs.conf.j2
+    dest: /etc/koji.conf.d/odcs.conf
+    owner: odcs-server
+    group: odcs-server
+    mode: 0440
+  notify:
+  - restart odcs-celery-backend
+  tags:
+  - odcs
+
+- name: copy the ODCS keytab
+  copy:
+    src: "{{ odcs_krb_auth_keytab }}"
+    dest: /etc/odcs/odcs.keytab
+    owner: odcs-server
+    group: odcs-server
+    mode: 0440
+  tags:
+  - odcs
+
+# This will initialize Alembic if the database is empty, and migrate to the
+# latest revision
+- name: migrate the database
+  command: "{{ item }}"
+  with_items:
+  - odcs-manager upgradedb
+  become: yes
+  become_user: odcs-server
+  when: odcs_migrate_db
+  notify:
+  - restart odcs-celery-backend
+  tags:
+  - odcs
+
+- name: ensure Pungi cache files have right ownership
+  file:
+    path: "{{ item }}"
+    owner: odcs-server
+    group: odcs-server
+    state: touch
+  with_items:
+    - /var/tmp/pungi_cache_file.dbm.rw.lock
+    - /var/tmp/pungi_cache_file.dbm
+  tags:
+    - odcs
+
+- name: start ODCS backend (odcs-celery-backend)
+  systemd:
+    name: odcs-celery-backend
+    state: started
+  tags:
+  - odcs

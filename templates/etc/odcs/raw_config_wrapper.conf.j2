@@ -1,0 +1,28 @@
+# Wrapper config for real raw config file.
+# The goal of this wrapper is to ensure that certain config options cannot be
+# changed by the submitted raw config.
+
+from raw_config import *
+
+koji_profile = "{{ odcs_koji_profile }}"
+createrepo_deltas = False
+
+dogpile_cache_backend = "dogpile.cache.dbm"
+dogpile_cache_arguments = {
+    "filename": "/var/tmp/pungi_cache_file.dbm",
+}
+dogpile_cache_expiration_time = 14400
+
+{% if odcs_use_ssh_runroot %}
+runroot_method = "openssh"
+runroot_ssh_username = "fedmsg"
+runroot_ssh_hostnames = {{ odcs_runroot_ssh_hostnames | to_json }}
+runroot_ssh_init_template = "sudo /usr/bin/odcs-mock-runroot init {runroot_tag}"
+runroot_ssh_install_packages_template = "sudo /usr/bin/odcs-mock-runroot install {runroot_key} {packages}"
+runroot_ssh_run_template = 'sudo /usr/bin/odcs-mock-runroot run {runroot_key} {command}'
+{% endif %}
+
+buildinstall_use_guestmount = True
+
+# Run at most 2 createrepo_c processes for any given compose.
+createrepo_num_threads = 2

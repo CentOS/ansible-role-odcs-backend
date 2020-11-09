@@ -1,0 +1,59 @@
+---
+odcs_endpoint: ''
+odcs_db_host: localhost
+odcs_db_port: 5432
+odcs_db_name: 'odcs'
+odcs_allowed_named_hosts: []
+odcs_allowed_hosts: []
+odcs_force_ssl: True
+odcs_migrate_db: False
+odcs_upgrade: False
+odcs_force_postgres_ssl: False
+odcs_koji_profile: odcs
+odcs_koji_server: https://kojihub.example.com/kojihub
+odcs_koji_weburl: https://kojiweb.example.com/koji
+odcs_koji_topurl: http://download.example.com/kojiroot
+odcs_koji_topdir: /mnt/example.com/kojiroot
+odcs_koji_authtype: kerberos
+odcs_koji_krbservice: koji 
+odcs_pdc_url: https://fake.pdc.host.url.com/rest_api/v1
+odcs_pdc_insecure: False
+odcs_pdc_develop: True
+odcs_target_dir: /var/www/composes
+odcs_target_dir_url: http://localhost/composes
+odcs_extra_target_dirs: {}
+odcs_auth_backend: kerberos
+odcs_auth_ldap_server: ldap.corp.example.com
+odcs_auth_ldap_group_base: ou=groups,dc=example,dc=com
+odcs_messaging_backend: fedora-messaging 
+odcs_messaging_certificate: "/THIS/FILE/PROBABLY/DOESNT/EXIST"
+odcs_messaging_private_key: "/THIS/FILE/PROBABLY/DOESNT/EXIST"
+odcs_messaging_broker_urls: []
+odcs_messaging_ca_cert: /etc/ssl/certs/ca-bundle.trust.crt
+odcs_allowed_clients: {"users": [], "groups": []}
+odcs_admins: {"users": [], "groups": []}
+odcs_raw_config_urls: {}
+odcs_allowed_source_types: null
+odcs_allowed_flags: null
+odcs_allowed_arches: null
+odcs_allowed_results: null
+odcs_allowed_sources: null
+odcs_arches: ["x86_64"]
+odcs_sigkeys: []
+odcs_celery_broker_username: null
+odcs_celery_broker_password: null
+odcs_celery_broker_host: null
+odcs_celery_broker_port: null
+odcs_celery_broker_vhost: rabbitmq
+odcs_celery_queues: ["pungi_composes", "cleanup"]
+odcs_celery_router_config: null
+odcs_runroot_ssh_hostnames: {"x86_64": "localhost"}
+odcs_use_ssh_runroot: True
+# The default is 24 hours
+odcs_seconds_to_live: 86400
+# The default is 72 hours
+odcs_max_seconds_to_live: 259200
+odcs_celery_concurrency: 2
+# # ODCS rpm package directory for deployment after nightly build
+# odcs_pkg_dir: /tmp/pkg
+# odcs_nightly: False
