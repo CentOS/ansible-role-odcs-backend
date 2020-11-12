@@ -25,7 +25,6 @@
   vars:
     packages:
     - odcs
-    - jigdo
     - pungi-modular-support
     - pungi
     - koji
