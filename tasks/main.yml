@@ -66,10 +66,6 @@
   tags:
     - odcs
 
-#########
-# Rabbitmq part might need to be moved to different role
-# It also needs help from from fedora-infra to setup
-# https://pagure.io/fedora-infrastructure/issue/9450
 - name: copy the fedora-messaging.toml.j2 file.
   template:
     src: "fedora-messaging.toml.j2"
@@ -80,6 +76,7 @@
   tags:
   - odcs
   
+# https://pagure.io/fedora-infrastructure/issue/9450
 - name: copy the odcs rabbitmq private queue crt.
   copy:
     src: "{{private}}/files/rabbitmq/{{env}}/pki/issued/odcs-private-queue{{env_suffix}}.crt"
@@ -141,115 +138,6 @@
   - /var/tmp/pungi_cache_file.dbm
   tags:
     - odcs
-
-- name: Configure the odcs virtual host
-  run_once: true
-  delegate_to: "rabbitmq01.iad2.fedoraproject.org"
-  rabbitmq_vhost:
-    name: /odcs
-    state: present
-  tags:
-  - odcs
-
-- name: Configure the HA policy for the odcs queues
-  run_once: true
-  delegate_to: "rabbitmq01.iad2.fedoraproject.org"
-  rabbitmq_policy:
-    name: HA
-    apply_to: queues
-    pattern: .*
-    tags:
-      ha-mode: all
-      ha-sync-mode: automatic  # Auto sync queues to new cluster members
-      ha-sync-batch-size: 10000  # Larger is faster, but must finish in 1 net_ticktime
-    vhost: /odcs
-  tags:
-  - odcs
-
-- name: Add a policy to limit queues to 1GB and remove after a month of no use
-  run_once: true
-  delegate_to: "rabbitmq01.iad2.fedoraproject.org"
-  rabbitmq_policy:
-    apply_to: queues
-    name: pubsub_sweeper
-    state: present
-    pattern: ".*"
-    tags:
-      # Unused queues are killed after 1000 * 60 * 60 * 31 milliseconds (~a month)
-      expires: 111600000
-      # Queues can use at most 1GB of storage
-      max-length-bytes: 1073741824
-    vhost: /odcs
-  tags:
-  - odcs
-
-- name: Create the odcs-admin user for the odcs vhost (prod)
-  run_once: true
-  delegate_to: "rabbitmq01.iad2.fedoraproject.org"
-  rabbitmq_user:
-    user: odcs-admin
-    password: "{{ (env == 'production')|ternary(rabbitmq_odcs_admin_password_production, rabbitmq_odcs_admin_password_staging) }}"
-    vhost: /odcs
-    configure_priv: .*
-    read_priv: .*
-    write_priv: .*
-  tags:
-  - odcs
-
-- name: Dump the admin password in a file for administrative operations
-  run_once: true
-  delegate_to: "rabbitmq01.iad2.fedoraproject.org"
-  copy:
-    dest: /root/.odcs-rabbitmqpass
-    content: "{{ (env == 'production')|ternary(rabbitmq_odcs_admin_password_production, rabbitmq_odcs_admin_password_staging) }}"
-    mode: 0600
-    owner: root
-    group: root
-  tags:
-  - odcs
-
-- name: Grant the admin user access to the odcs vhost
-  run_once: true
-  delegate_to: "rabbitmq01.iad2.fedoraproject.org"
-  rabbitmq_user:
-    user: admin
-    vhost: /odcs
-    configure_priv: .*
-    read_priv: .*
-    write_priv: .*
-    tags: administrator
-  tags:
-  - odcs
-
-- name: Grant the nagios-monitoring user access to the odcs vhost
-  run_once: true
-  delegate_to: "rabbitmq01.iad2.fedoraproject.org"
-  rabbitmq_user:
-    user: nagios-monitoring
-    vhost: /odcs
-    configure_priv: "^$"
-    read_priv: "^$"
-    write_priv: "^$"
-    tags: monitoring
-  tags:
-  - odcs
-
-# Create a user with:
-- name: Create a user for odcs access
-  run_once: true
-  delegate_to: "rabbitmq01.iad2.fedoraproject.org"
-  rabbitmq_user:
-    user: "odcs-private-queue{{ env_suffix }}"
-    vhost: /odcs
-    configure_priv: .*
-    write_priv: .*
-    read_priv: .*
-    state: present
-  tags:
-  - odcs
-#########
-
-
 
 - name: copy the odcs-celery-backend.service file.
   template:
