@@ -79,7 +79,7 @@
 # https://pagure.io/fedora-infrastructure/issue/9450
 - name: copy the odcs rabbitmq private queue crt.
   copy:
-    src: "{{pkistore}}/rabbitmq-private/odcs-private-queue{{env_suffix}}.crt"
+    src: "{{pkistore}}/rabbitmq-private/centos-odcs-private-queue.crt"
     dest: /etc/odcs/odcs-private-queue.crt
     owner: odcs-server
     group: apache
@@ -89,7 +89,7 @@
  
 - name: copy the odcs rabbitmq private queue key.
   copy:
-    src: "{{pkistore}}/rabbitmq-private/odcs-private-queue{{env_suffix}}.key"
+    src: "{{pkistore}}/rabbitmq-private/centos-odcs-private-queue.key"
     dest: /etc/odcs/odcs-private-queue.key
     owner: odcs-server
     group: apache
@@ -99,7 +99,7 @@
  
 - name: copy the odcs rabbitmq crt.
   copy:
-    src: "{{pkistore}}/fedora-messaging/odcs{{env_suffix}}.crt"
+    src: "{{pkistore}}/fedora-messaging/odcs/centos-odcs.crt"
     dest: /etc/odcs/odcs-rabbitmq.crt
     owner: odcs-server
     group: apache
@@ -109,7 +109,7 @@
  
 - name: copy the odcs rabbitmq key.
   copy:
-    src: "{{pkistore}}/fedora-messaging/private/odcs{{env_suffix}}.key"
+    src: "{{pkistore}}/fedora-messaging/odcs/centos-odcs.key"
     dest: /etc/odcs/odcs-rabbitmq.key
     owner: odcs-server
     group: apache
