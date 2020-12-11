@@ -1,18 +1,18 @@
 ---
 - name: restart odcs-backend service
-    service:
-          name: "odcs-backend"
-                state: restarted
+  service:
+    name: "odcs-backend"
+    state: restarted
 - name: restart fedmsg-hub
-    service:
-          name: fedmsg-hub
-                state: restarted
+  service:
+    name: fedmsg-hub
+    state: restarted
 - name: restart httpd-if-running
-    service:
-          name: httpd
-                state: restarted
-                    when: (httpd_status.rc == 0)
+  service:
+    name: httpd
+    state: restarted
+    when: (httpd_status.rc == 0)
 - name: restart odcs-celery-backend
-    service:
-          name: odcs-celery-backend
-                state: restarted
+  service:
+    name: odcs-celery-backend
+    state: restarted
