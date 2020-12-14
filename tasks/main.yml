@@ -1,11 +1,28 @@
 ---
 - name: install the EPEL packages required for ODCS backend
   yum:
+    name: "epel-release"
+    state: present
+  tags:
+  - odcs
+
+- name: Use the Fedora infra repo
+  copy:
+    src: infrastructure.repo
+    dest: /etc/yum.repos.d/infrastructure.repo
+    mode: 0644
+    owner: root
+    group: root
+
+- name: install various packages required for ODCS backend
+  yum:
     name: "{{ packages }}"
     state: present
     use_backend: yum
   vars:
     packages:
+    - fedora-messaging
+    - httpd
     - python-qpid-proton
     - python2-koji-cli-plugins
     - python-psycopg2
@@ -25,6 +42,8 @@
   vars:
     packages:
     - odcs
+    - odcs-client
+    - python2-odcs-common
     - pungi-modular-support
     - pungi
     - koji
@@ -32,13 +51,13 @@
   tags:
   - odcs
 
-- name: Make sure odcs-celery-backend isn't running.
-  service:
-    name: odcs-celery-backend
-    state: stopped
-  tags:
-    - odcs
-    - odcs/backend
+#- name: Make sure odcs-celery-backend isn't running.
+#  service:
+#    name: odcs-celery-backend
+#    state: stopped
+#  tags:
+#    - odcs
+#    - odcs/backend
 
 - name: create odcs-server group
   group:
@@ -82,7 +101,6 @@
     src: "{{pkistore}}/rabbitmq-private/centos-odcs-private-queue.crt"
     dest: /etc/odcs/odcs-private-queue.crt
     owner: odcs-server
-    group: apache
     mode: 0640
   tags:
   - odcs
@@ -92,7 +110,6 @@
     src: "{{pkistore}}/rabbitmq-private/centos-odcs-private-queue.key"
     dest: /etc/odcs/odcs-private-queue.key
     owner: odcs-server
-    group: apache
     mode: 0640
   tags:
   - odcs
@@ -102,7 +119,6 @@
     src: "{{pkistore}}/fedora-messaging/odcs/centos-odcs.crt"
     dest: /etc/odcs/odcs-rabbitmq.crt
     owner: odcs-server
-    group: apache
     mode: 0640
   tags:
   - odcs
@@ -112,7 +128,6 @@
     src: "{{pkistore}}/fedora-messaging/odcs/centos-odcs.key"
     dest: /etc/odcs/odcs-rabbitmq.key
     owner: odcs-server
-    group: apache
     mode: 0640
   tags:
   - odcs
@@ -265,13 +280,35 @@
   tags:
   - odcs
 
-- name: copy the ODCS keytab
+- name: copy the ODCS keytab (kerberos)
   copy:
     src: "{{ odcs_krb_auth_keytab }}"
     dest: /etc/odcs/odcs.keytab
     owner: odcs-server
     group: odcs-server
     mode: 0440
+  when: odcs_koji_authtype  == "kerberos"
+  tags:
+  - odcs
+
+- name: copy the ODCS user cert (ssl)
+  copy:
+    src: "{{ pkistore }}/odcs.pem"
+    dest: /home/odcs-server/.centos.cert
+    owner: odcs-server
+    group: odcs-server
+    mode: 0600
+  when: odcs_koji_authtype  == "ssl"
+  tags:
+  - odcs
+- name: copy the ODCS ca cert (ssl)
+  copy:
+    src: "{{ pkistore }}/fas_ca_cert-prod.crt"
+    dest: /home/odcs-server/.centos-server-ca.cert
+    owner: odcs-server
+    group: odcs-server
+    mode: 0600
+  when: odcs_koji_authtype  == "ssl"
   tags:
   - odcs
 

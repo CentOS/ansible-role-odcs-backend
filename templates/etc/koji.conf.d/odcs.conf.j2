@@ -12,11 +12,12 @@ topurl = {{ odcs_koji_topurl }}
 ;path to the koji top directory
 topdir = {{ odcs_koji_topdir }}
 
-authtype = {{ odcs_koji_authtype }}
-krbservice = {{ odcs_koji_krbservice }}
+;client certificate
+cert = ~/.centos.cert
 
-principal = {{ odcs_krb_auth_principal }}
-keytab = /etc/odcs/odcs.keytab
+;certificate of the CA that issued the client certificate
+ca = ~/.centos-server-ca.cert
 
-use_fast_upload = yes
-anon_retry = yes
+;certificate of the CA that issued the HTTP server certificate
+serverca = ~/.centos-server-ca.cert
+

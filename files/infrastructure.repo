@@ -1,0 +1,12 @@
+[infrastructure-tags]
+name=Fedora Infrastructure tag $releasever - $basearch
+baseurl=https://kojipkgs.fedoraproject.org/repos-dist/epel$releasever-infra/latest/$basearch/
+enabled=1
+gpgcheck=1
+gpgkey=https://infrastructure.fedoraproject.org/repo/infra/RPM-GPG-KEY-INFRA-TAGS
+
+[centos-infra-tags]
+name=CentOS Infra Tags $releasever - $basearch
+baseurl=https://buildlogs.centos.org/centos/7/infra/x86_64/buildtools-common/
+enabled=1
+gpgcheck=0

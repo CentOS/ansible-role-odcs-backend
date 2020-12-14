@@ -61,7 +61,7 @@ class ProdConfiguration(BaseConfiguration):
     KOJI_PROFILE = "{{ odcs_koji_profile }}"
     MBS_URL = "{{ odcs_mbs_url }}"
     TARGET_DIR = "{{ odcs_target_dir }}"
-    TARGET_DIR_URL = "{{ odcs_target_url }}"
+    TARGET_DIR_URL = "{{ odcs_target_dir_url }}"
 
     AUTH_BACKEND = "{{ odcs_auth_backend }}"
     AUTH_LDAP_SERVER = "{{ odcs_auth_ldap_server }}"
@@ -72,16 +72,13 @@ class ProdConfiguration(BaseConfiguration):
     MESSAGING_CERT_FILE = "/etc/ssl/odcs/umb-client.crt"
     MESSAGING_KEY_FILE = "/etc/ssl/odcs/umb-client.key"
     MESSAGING_CA_CERT = "{{ odcs_messaging_ca_cert }}"
-    MESSAGING_TOPIC_PREFIX = "{{ odcs_messaging_topic_prefix }}"
-    MESSAGING_TOPIC = "VirtualTopic.eng.odcs.state.change"
-    INTERNAL_MESSAGING_TOPIC = "VirtualTopic.eng.odcs.internal.msg"
+    MESSAGING_TOPIC_PREFIX = "org.centos.prod."
+    MESSAGING_TOPIC = "odcs.compose.state-changed"
+    INTERNAL_MESSAGING_TOPIC = "odcs.internal.msg"
 
     ALLOWED_CLIENTS = {{ odcs_allowed_clients }}
     ADMINS = {{ odcs_admins }}
 
-    PULP_SERVER_URL = "{{ odcs_pulp_server_url }}"
-    PULP_USERNAME = "{{ odcs_pulp_username }}"
-    PULP_PASSWORD = "{{ odcs_pulp_password }}"
 
 {% if odcs_allowed_source_types %}
     ALLOWED_SOURCE_TYPES = {{ odcs_allowed_source_types }}
