@@ -117,7 +117,7 @@
 - name: copy the odcs rabbitmq crt.
   copy:
     src: "{{pkistore}}/fedora-messaging/odcs/centos-odcs.crt"
-    dest: /etc/odcs/odcs-rabbitmq.crt
+    dest: /etc/odcs/centos-odcs-rabbitmq.crt
     owner: odcs-server
     mode: 0640
   tags:
@@ -126,7 +126,7 @@
 - name: copy the odcs rabbitmq key.
   copy:
     src: "{{pkistore}}/fedora-messaging/odcs/centos-odcs.key"
-    dest: /etc/odcs/odcs-rabbitmq.key
+    dest: /etc/odcs/centos-odcs-rabbitmq.key
     owner: odcs-server
     mode: 0640
   tags:
