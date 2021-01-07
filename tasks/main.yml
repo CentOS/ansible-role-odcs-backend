@@ -142,6 +142,16 @@
   tags:
   - odcs
 
+- name: generate the fedora-messaging config
+  template:
+    src: fedora-messaging.toml.j2
+    dest: /etc/fedora-messaging/config.toml
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+  - odcs
+
 - name: ensure Pungi cache files have right ownership
   file:
     path: "{{ item }}"

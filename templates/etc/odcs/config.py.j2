@@ -108,12 +108,14 @@ class ProdConfiguration(BaseConfiguration):
     SIGKEYS = {{ odcs_sigkeys }}
 
 {% if odcs_celery_broker_host %}
-    CELERY_BROKER_URL = "amqps://{{ odcs_celery_broker_username }}:{{ odcs_celery_broker_password }}@{{ odcs_celery_broker_host }}:{{ odcs_celery_broker_port }}/{{ odcs_celery_broker_vhost }}"
+    CELERY_BROKER_URL = "amqps://{{ odcs_celery_broker_username }}:{{ odcs_celery_broker_password }}@{{ odcs_celery_broker_host }}/{{ odcs_celery_broker_vhost }}"
+    CELERY_CONFIG = { 
+        'certfile': "/etc/odcs/odcs-private-queue.crt",
+        'keyfile': "/etc/odcs/odcs-private-queue.key",
+        'ca_certs': "/etc/odcs/ca.crt",
+        'broker_login_method': "EXTERNAL",
+    } 
 {% endif %}
-
-    CELERY_CONFIG = {
-        "server_hostname": True,
-    }
 
 {% if odcs_celery_router_config %}
     CELERY_ROUTER_CONFIG = {{ odcs_celery_router_config }}
