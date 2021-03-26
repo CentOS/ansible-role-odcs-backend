@@ -1,6 +1,6 @@
 ---
 - name: install the EPEL packages required for ODCS backend
-  yum:
+  package:
     name: "epel-release"
     state: present
   tags:
@@ -15,18 +15,17 @@
     group: root
 
 - name: install various packages required for ODCS backend
-  yum:
+  package:
     name: "{{ packages }}"
     state: present
-    use_backend: yum
   vars:
     packages:
     - fedora-messaging
     - httpd
-    - python-qpid-proton
-    - python2-koji-cli-plugins
-    - python-psycopg2
-    - python2-celery
+    - python3-qpid-proton
+    - python3-koji-cli-plugins
+    - python3-psycopg2
+    - python3-celery
     - mock
     - dnf
     - libguestfs-tools-c
@@ -34,20 +33,18 @@
   - odcs
 
 - name: install the internal packages required for ODCS backend
-  yum:
+  package:
     name: "{{ packages }}"
     state: present
     update_cache: yes
-    use_backend: yum
   vars:
     packages:
     - odcs
     - odcs-client
-    - python2-odcs-common
-    - pungi-modular-support
+    - python3-odcs-common
     - pungi
     - koji
-    - libmodulemd2
+    - libmodulemd
   tags:
   - odcs
 
@@ -139,16 +136,6 @@
     owner: odcs-server
     group: apache
     mode: 0640
-  tags:
-  - odcs
-
-- name: generate the fedora-messaging config
-  template:
-    src: fedora-messaging.toml.j2
-    dest: /etc/fedora-messaging/config.toml
-    owner: root
-    group: root
-    mode: 0644
   tags:
   - odcs
 
@@ -311,6 +298,7 @@
   when: odcs_koji_authtype  == "ssl"
   tags:
   - odcs
+
 - name: copy the ODCS ca cert (ssl)
   copy:
     src: "{{ pkistore }}/fas_ca_cert-prod.crt"

@@ -7,6 +7,6 @@ gpgkey=https://infrastructure.fedoraproject.org/repo/infra/RPM-GPG-KEY-INFRA-TAG
 
 [centos-infra-tags]
 name=CentOS Infra Tags $releasever - $basearch
-baseurl=https://buildlogs.centos.org/centos/7/infra/x86_64/buildtools-common/
+baseurl=https://buildlogs.centos.org/centos/$releasever/infra/x86_64/buildtools-common/
 enabled=1
 gpgcheck=0
