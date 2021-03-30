@@ -56,6 +56,27 @@
 #    - odcs
 #    - odcs/backend
 
+- name: create local folders when nfs_create_local_folders is set
+  file:
+    path: "{{ item.path }}"
+    state: directory
+  loop: "{{ nfs_mounts }}"
+
+- name: mount filesystems
+  mount:
+    name: "{{ item.path }}"
+    src: "{{ item.src }}"
+    fstype: nfs
+    state: "{{ item.state|default('mounted') }}"
+    opts: "{{ item.opts }}"
+  with_items: "{{ nfs_mounts }}"
+  when:
+  - nfs_mounts|length > 0
+  - item.path is defined
+  - item.src is defined
+  - item.path
+  - item.src
+
 - name: create odcs-server group
   group:
     name: odcs-server
