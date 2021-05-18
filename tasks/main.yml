@@ -25,10 +25,15 @@
     - python3-qpid-proton
     - python3-koji-cli-plugins
     - python3-psycopg2
+    - python3-stevedore
     - python3-celery
     - mock
     - dnf
+    - make
     - libguestfs-tools-c
+    - libxslt
+    - libxml2
+    - intltool
   tags:
   - odcs
 
@@ -43,6 +48,8 @@
     - odcs-client
     - python3-odcs-common
     - pungi
+    - fus
+    - lorax
     - koji
     - libmodulemd
   tags:
@@ -150,6 +157,14 @@
   tags:
   - odcs
  
+- name: copy the root CA
+  copy:
+    src: "{{ root_ca.src }}"
+    dest: "{{ root_ca.dest }}"
+    owner: root
+  tags:
+    - odcs
+
 - name: copy the odcs rabbitmq CA cert.
   copy:
     src: "{{pkistore}}/fedora-messaging/ca.crt"

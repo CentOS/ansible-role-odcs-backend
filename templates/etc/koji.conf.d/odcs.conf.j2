@@ -12,6 +12,7 @@ topurl = {{ odcs_koji_topurl }}
 ;path to the koji top directory
 topdir = {{ odcs_koji_topdir }}
 
+{% if odcs_koji_authtype == 'ssl' %}
 ;client certificate
 cert = ~/.centos.cert
 
@@ -20,4 +21,16 @@ ca = ~/.centos-server-ca.cert
 
 ;certificate of the CA that issued the HTTP server certificate
 serverca = ~/.centos-server-ca.cert
+{% endif %}
 
+{% if odcs_koji_authtype == 'kerberos' %}
+authtype = kerberos
+krb_rdns = false
+
+use_fast_upload = yes
+krbservice = kojihub
+
+serverca = /etc/pki/ca-trust/source/anchors/RH-IT-Root-CA.crt
+principal = odcs/odcs.stream.rdu2.redhat.com@REDHAT.COM
+keytab = /etc/odcs/odcs.keytab
+{% endif %}
