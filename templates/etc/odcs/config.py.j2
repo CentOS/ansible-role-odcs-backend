@@ -61,11 +61,14 @@ class ProdConfiguration(BaseConfiguration):
     KOJI_PROFILE = "{{ odcs_koji_profile }}"
     MBS_URL = "{{ odcs_mbs_url }}"
     TARGET_DIR = "{{ odcs_target_dir }}"
-    TARGET_DIR_URL = "{{ odcs_target_dir_url }}"
+    TARGET_DIR_URL = "{{ odcs_target_url }}"
 
     AUTH_BACKEND = "{{ odcs_auth_backend }}"
     AUTH_LDAP_SERVER = "{{ odcs_auth_ldap_server }}"
     AUTH_LDAP_GROUP_BASE = "{{ odcs_auth_ldap_group_base }}"
+
+    SECONDS_TO_LIVE = {{ odcs_seconds_to_live }}
+    MAX_SECONDS_TO_LIVE = {{ odcs_max_seconds_to_live }}
 
     MESSAGING_BACKEND = "{{ odcs_messaging_backend }}"
     MESSAGING_BROKER_URLS = {{ odcs_messaging_producer_broker_urls }}
@@ -78,7 +81,6 @@ class ProdConfiguration(BaseConfiguration):
 
     ALLOWED_CLIENTS = {{ odcs_allowed_clients }}
     ADMINS = {{ odcs_admins }}
-
 
 {% if odcs_allowed_source_types %}
     ALLOWED_SOURCE_TYPES = {{ odcs_allowed_source_types }}
@@ -106,6 +108,8 @@ class ProdConfiguration(BaseConfiguration):
 
     ARCHES = {{ odcs_arches }}
     SIGKEYS = {{ odcs_sigkeys }}
+    SECONDS_TO_LIVE = {{ odcs_seconds_to_live }}
+    MAX_SECONDS_TO_LIVE = {{ odcs_max_seconds_to_live }}
 
 {% if odcs_celery_broker_host %}
     CELERY_BROKER_URL = "amqps://{{ odcs_celery_broker_username }}:{{ odcs_celery_broker_password }}@{{ odcs_celery_broker_host }}/{{ odcs_celery_broker_vhost }}"
@@ -117,8 +121,7 @@ class ProdConfiguration(BaseConfiguration):
     } 
 {% endif %}
 
+
 {% if odcs_celery_router_config %}
     CELERY_ROUTER_CONFIG = {{ odcs_celery_router_config }}
 {% endif %}
-
-    RUNROOT_EXTRA_MOUNTS = ["/mnt/koji"]
