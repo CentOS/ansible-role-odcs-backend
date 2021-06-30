@@ -108,8 +108,6 @@ class ProdConfiguration(BaseConfiguration):
 
     ARCHES = {{ odcs_arches }}
     SIGKEYS = {{ odcs_sigkeys }}
-    SECONDS_TO_LIVE = {{ odcs_seconds_to_live }}
-    MAX_SECONDS_TO_LIVE = {{ odcs_max_seconds_to_live }}
 
 {% if odcs_celery_broker_host %}
     CELERY_BROKER_URL = "amqps://{{ odcs_celery_broker_username }}:{{ odcs_celery_broker_password }}@{{ odcs_celery_broker_host }}/{{ odcs_celery_broker_vhost }}"
