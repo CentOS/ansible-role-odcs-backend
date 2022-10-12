@@ -34,6 +34,7 @@
     - libxslt
     - libxml2
     - intltool
+    - xorriso
   tags:
   - odcs
 
