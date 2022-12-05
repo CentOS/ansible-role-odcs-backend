@@ -1,60 +1,26 @@
 ---
-- name: install the EPEL packages required for ODCS backend
-  package:
-    name: "epel-release"
-    state: present
+- name: Importing specific distro variables
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+    - "{{ ansible_distribution }}.yml"
+    - "{{ ansible_os_family }}.yml"
   tags:
-  - odcs
+    - vars
 
-- name: Use the Fedora infra repo
-  copy:
-    src: infrastructure.repo
-    dest: /etc/yum.repos.d/infrastructure.repo
-    mode: 0644
-    owner: root
-    group: root
+- include_role:
+    name: baseline
+    tasks_from: buildtools_repo
+  tags:
+    - repo
 
 - name: install various packages required for ODCS backend
   package:
-    name: "{{ packages }}"
-    state: present
-  vars:
-    packages:
-    - fedora-messaging
-    - httpd
-    - python3-qpid-proton
-    - python3-koji-cli-plugins
-    - python3-psycopg2
-    - python3-stevedore
-    - python3-celery
-    - mock
-    - dnf
-    - make
-    - libguestfs-tools-c
-    - libxslt
-    - libxml2
-    - intltool
-    - xorriso
+    name: "{{ odcs_backend_pkgs_list }}"
+    state: installed
   tags:
   - odcs
-
-- name: install the internal packages required for ODCS backend
-  package:
-    name: "{{ packages }}"
-    state: present
-    update_cache: yes
-  vars:
-    packages:
-    - odcs
-    - odcs-client
-    - python3-odcs-common
-    - pungi
-    - fus
-    - lorax
-    - koji
-    - libmodulemd
-  tags:
-  - odcs
+  - pkgs
 
 #- name: Make sure odcs-celery-backend isn't running.
 #  service:
@@ -267,6 +233,7 @@
   - restart odcs-celery-backend
   tags:
   - odcs
+  - config
 
 - name: generate the ODCS raw_config_wrapper config
   template:

@@ -1,4 +1,7 @@
 ---
+# Specific rpm version for odcs to deploy
+odcs_pkg_version: 0.2.50-2
+
 odcs_endpoint: ''
 odcs_db_host: localhost
 odcs_db_port: 5432

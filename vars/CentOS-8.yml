@@ -1,0 +1,28 @@
+# el8 variables for odcs-backend role
+
+odcs_backend_pkgs_list:
+  - fedora-messaging
+  - httpd
+  - python3-qpid-proton
+  - python3-koji-cli-plugins
+  - python3-psycopg2
+  - python3-stevedore
+  - python3-celery
+  - mock
+  - dnf
+  - make
+  - libguestfs-tools-c
+  - libxslt
+  - libxml2
+  - intltool
+  - xorriso
+  - odcs-{{ odcs_pkg_version }}.el8
+  - odcs-client-{{ odcs_pkg_version }}.el8
+  - python3-odcs-common-{{ odcs_pkg_version }}.el8
+  - pungi
+  - fus
+  - lorax
+  - koji
+  - libmodulemd
+
+
