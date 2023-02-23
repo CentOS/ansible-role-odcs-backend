@@ -13,8 +13,8 @@ topic_prefix = "org.centos.prod"
 
 [tls]
 ca_cert = "/etc/odcs/ca.crt"
-keyfile = "/etc/odcs/centos-odcs-rabbitmq.key"
-certfile = "/etc/odcs/centos-odcs-rabbitmq.crt"
+keyfile = "/etc/odcs/{{ odcs_fedora_messaging_tls_file }}.key"
+certfile = "/etc/odcs/{{ odcs_fedora_messaging_tls_file }}.crt"
 
 [client_properties]
 app = "centos-odcs"

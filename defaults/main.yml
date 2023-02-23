@@ -60,3 +60,20 @@ odcs_celery_concurrency: 2
 # # ODCS rpm package directory for deployment after nightly build
 # odcs_pkg_dir: /tmp/pkg
 # odcs_nightly: False
+
+
+# We'll use two TLS certs as for client auth
+# Which files (with .crt) to use ?
+# First one is for fedora-messaging (notifications)
+# Should be found under {{ pkistore }}/fedora-messaging
+odcs_fedora_messaging_tls_file: centos-odcs
+# Second one is to use a rabbitmq queue for workers
+# Should be found under {{ pkistore }}/rabbitmq-private
+odcs_rabbitmq_queue_tls_file: centos-odcs-private-queue
+
+# Monitoring
+# Zabbix config
+zabbix_odcs_templates:
+  - Template CentOS odcs
+zabbix_odcs_groups: []
+

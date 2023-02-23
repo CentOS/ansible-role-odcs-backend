@@ -112,8 +112,8 @@ class ProdConfiguration(BaseConfiguration):
 {% if odcs_celery_broker_host %}
     CELERY_BROKER_URL = "amqps://{{ odcs_celery_broker_username }}:{{ odcs_celery_broker_password }}@{{ odcs_celery_broker_host }}/{{ odcs_celery_broker_vhost }}"
     CELERY_CONFIG = { 
-        'certfile': "/etc/odcs/odcs-private-queue.crt",
-        'keyfile': "/etc/odcs/odcs-private-queue.key",
+        'certfile': "/etc/odcs/{{ odcs_rabbitmq_queue_tls_file }}.crt",
+        'keyfile': "/etc/odcs/{{ odcs_rabbitmq_queue_tls_file }}.key",
         'ca_certs': "/etc/odcs/ca.crt",
         'broker_login_method': "EXTERNAL",
     } 

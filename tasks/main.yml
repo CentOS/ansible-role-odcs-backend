@@ -88,41 +88,38 @@
   - odcs
   
 # https://pagure.io/fedora-infrastructure/issue/9450
-- name: copy the odcs rabbitmq private queue crt.
+- name: ODCS rabbitmq private queue TLS files
   copy:
-    src: "{{pkistore}}/rabbitmq-private/centos-odcs-private-queue.crt"
-    dest: /etc/odcs/odcs-private-queue.crt
+    src: "{{ pkistore }}/rabbitmq-private/{{ item }}"
+    dest: "/etc/odcs/{{ item }}"
     owner: odcs-server
     mode: 0640
+  with_items:
+    -  "{{ odcs_rabbitmq_queue_tls_file }}.crt"
+    -  "{{ odcs_rabbitmq_queue_tls_file }}.key"
+  notify:
+    - restart odcs-celery-backend
+    - restart odcs-backend service
   tags:
-  - odcs
+    - odcs
+    - tls
  
-- name: copy the odcs rabbitmq private queue key.
+- name: ODCS fedora-messaging rabbitmq TLS files
   copy:
-    src: "{{pkistore}}/rabbitmq-private/centos-odcs-private-queue.key"
-    dest: /etc/odcs/odcs-private-queue.key
+    src: "{{pkistore}}/fedora-messaging/odcs/{{ item }}"
+    dest: "/etc/odcs/{{ item }}"
     owner: odcs-server
     mode: 0640
+  with_items:
+    - "{{ odcs_fedora_messaging_tls_file }}.key"
+    - "{{ odcs_fedora_messaging_tls_file }}.crt"
+  notify:
+    - restart odcs-celery-backend
+    - restart odcs-backend service
   tags:
-  - odcs
+    - odcs
+    - tls
  
-- name: copy the odcs rabbitmq crt.
-  copy:
-    src: "{{pkistore}}/fedora-messaging/odcs/centos-odcs.crt"
-    dest: /etc/odcs/centos-odcs-rabbitmq.crt
-    owner: odcs-server
-    mode: 0640
-  tags:
-  - odcs
- 
-- name: copy the odcs rabbitmq key.
-  copy:
-    src: "{{pkistore}}/fedora-messaging/odcs/centos-odcs.key"
-    dest: /etc/odcs/centos-odcs-rabbitmq.key
-    owner: odcs-server
-    mode: 0640
-  tags:
-  - odcs
  
 - name: copy the root CA
   copy:
@@ -345,4 +342,36 @@
     name: odcs-celery-backend
     state: started
   tags:
-  - odcs
+    - odcs
+
+- block:
+    - name: Configuring zabbix agent
+      include_role:
+        name: zabbix-server
+        tasks_from: agent_config
+      vars:
+        zabbix_templates: "{{ zabbix_odcs_templates }}"
+        zabbix_groups: "{{ zabbix_odcs_groups }}"
+  delegate_to: "{{ zabbix_api_srv }}"
+  tags:
+    - monitoring
+  when:
+    - zabbix_api_srv is defined
+    - zabbix_monitoring
+
+- block:
+    - name: Distribute TLS validity check script
+      template:
+        src: odcs-tls-check.j2
+        dest: /usr/libexec/centos/odcs-tls-check
+        mode: '0750'
+        owner: root
+    - name: Reporting TLS validity value to zabbix
+      cron:
+        name: odcs tls cert check
+        job: /usr/libexec/centos/odcs-tls-check
+        minute: '*/30'
+
+  tags:
+    - monitoring
+

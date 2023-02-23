@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# This script will just locally verify TLS cert validity date and report to Zabbix
+
+# Fedora-messaging part
+end_date=$(openssl x509 -in /etc/odcs/{{ odcs_fedora_messaging_tls_file }}.crt -noout -text|sed -n 's/ *Not After : *//p')
+end_date_seconds=$(date '+%s' --date "$end_date")
+now_seconds=$(date '+%s')
+remaining_days=$(echo "($end_date_seconds-$now_seconds)/24/3600" | bc)
+zabbix_sender -c /etc/zabbix/zabbix_agentd.conf -k fedora_messaging_tls_validity -o ${remaining_days} >/dev/null:
+
+# Rabbitmq private queue part
+end_date=$(openssl x509 -in /etc/odcs/{{ odcs_rabbitmq_queue_tls_file }}.crt -noout -text|sed -n 's/ *Not After : *//p')
+end_date_seconds=$(date '+%s' --date "$end_date")
+now_seconds=$(date '+%s')
+remaining_days=$(echo "($end_date_seconds-$now_seconds)/24/3600" | bc)
+zabbix_sender -c /etc/zabbix/zabbix_agentd.conf -k rabbitmq_tls_validity -o ${remaining_days} >/dev/null:
