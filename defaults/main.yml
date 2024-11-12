@@ -18,6 +18,8 @@ odcs_koji_weburl: https://kojiweb.example.com/koji
 odcs_koji_topurl: http://download.example.com/kojiroot
 odcs_koji_topdir: /mnt/example.com/kojiroot
 odcs_koji_authtype: kerberos
+odcs_krb_auth_keytab: "{{ pkistore }}/odcs/my.keytab"
+odcs_krb_auth_principal: odcs/my.principal@REALM
 odcs_koji_krbservice: koji 
 odcs_pdc_url: https://fake.pdc.host.url.com/rest_api/v1
 odcs_pdc_insecure: False

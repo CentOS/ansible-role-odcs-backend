@@ -31,6 +31,6 @@ use_fast_upload = yes
 krbservice = kojihub
 
 serverca = /etc/pki/ca-trust/source/anchors/RH-IT-Root-CA.crt
-principal = odcs/odcs.stream.rdu2.redhat.com@REDHAT.COM
+principal = {{ odcs_krb_auth_principal }}
 keytab = /etc/odcs/odcs.keytab
 {% endif %}
